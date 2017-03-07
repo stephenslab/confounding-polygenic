@@ -34,7 +34,7 @@ are very preliminary.
 Consider a model relating phenotype $Y$ ($n$ by 1) to SNPs $X$ ($n$ by $p$),
 $$Y=X\beta + E.$$
 
-I find it useful to think about really extreme and simple situations.
+I find it useful to think about extreme and simple situations.
 So suppose your $X$ variables consist of blocks of completely correlated SNPs,
 where here completely correlated means population correlation = 1. Suppose
 also that the blocks are independent. 
