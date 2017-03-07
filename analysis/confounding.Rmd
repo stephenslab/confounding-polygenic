@@ -1,0 +1,134 @@
+---
+title: "Confounding vs polygenicitt: effects of adding more variants"
+author: "Matthew Stephens"
+date: 2017-04-07
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+## Setup
+
+A simple model of confounding is:
+$Z_j \sim N(0,1)$, $X_{jk} = Z_j + e_{1j}$, and $Y_j = Z_j + \sum_k X_{jk} \beta_k + e_{2j}$
+where $e_1$ and $e_2$ are iid $N(0,1)$ say. 
+So $$Y = Z_j (1+\sum_k \beta_k) + \sum_k \beta_k e_1 + e_2$$. 
+
+Here $Z$ is the confounder, correlated with both $Y$ and $X$.
+
+My question is what happens to various procedures that attempt to estimate variance in $Y$ due to $X$ when not all the $X$ are used. Does the "bias" that occurs
+due to confounding with $Z$ increase or stay constant as you put more of the $X$ variables in?
+
+First compute the covariance matrix of (Z,X1...,XK,Y).
+```{r cov}
+set.seed(1)
+K=500 # number of X variables
+beta = rnorm(K,0,sd=sqrt(1/K))
+L = diag(1,nrow = K+2)
+L[,1]=1 
+L[K+2,]=c(1+sum(beta),beta,1)
+S = L %*% t(L)
+Sinv = chol2inv(chol(S))
+plot(Sinv[K+2,-c(1,K+2)],beta)
+```
+
+Now we can look at the residual variance of Y given different subsets of the X.
+The residual variance is given by 1/omega_yy where omega is the inverse covariance
+matrix, and _yy indicates the element corresponding to y.
+```{r}
+#get the inverse covariance matrix of Y and a fraction f of the Xs
+getinv=function(S,f,random=FALSE){
+  K = nrow(S)-2
+  S = S[-1,-1] #remove Z rows and columns
+  
+  nkeep = trunc(f*K)
+  if(random){keep = sample(1:K, nkeep)}
+  else{keep = 1:nkeep}
+  
+  keep = c(keep,K+1) # keep Y row and column
+  
+  S=S[keep,keep]
+  Sinv = chol2inv(chol(S))
+  Sinv
+}
+lastelement=function(x){K=nrow(x); x[K,K]}
+```
+
+So in this case
+the variance of Y given none of the X values is ``r 1/lastelement(getinv(S,0))``
+and given all of the X values is ``r 1/lastelement(getinv(S,1))``.
+
+Look at how the estimated beta values given all the Xs are inflated by confounding with Z. It seems that they are systematically shifted up in this case (maybe because all the Xs are positively correlated with Z.).
+```{r}
+inv1 = getinv(S,1)
+betahat = -inv1[nrow(inv1),-nrow(inv1)]
+plot(beta,betahat-beta,ylim=c(0,0.003))
+```
+
+
+
+Here we look at how it goes between these values as we add more of the Xs in:
+
+```{r}
+rv = rep(0,100)
+f = seq(0,1,length=100)
+for(i in 1:100){rv[i] = 1/lastelement(getinv(S,f[i]))}
+plot(rv)
+```
+
+
+So, as we might expect, there is an initial large reduction in residual variance of Y as you add in a couple of Xs, and then the reduction becomes roughly linear. 
+
+This suggest that deviations from linearity can be used as a dianostic for confounding.
+
+However, if we only ever look at small subsets of the X we might be in the pre-linear part of the curve without knowing...
+
+
+```{r}
+rv = rep(0,100)
+f = runif(100,0.02,0.1)
+for(i in 1:100){rv[i] = 1/lastelement(getinv(S,f[i],random=TRUE))}
+rv0 = 1/lastelement(getinv(S,0))
+rve = (rv0-rv)/rv0 #residual variance explained
+plot(f,rve)
+rve.lm=lm(rve~f)
+summary(rve.lm)
+```
+
+This grossly overestimates the slope, which should be 1/3...
+
+```{r}
+rv = rep(0,100)
+f = runif(100,0.02,1)
+for(i in 1:100){rv[i] = 1/lastelement(getinv(S,f[i],random=TRUE))}
+rv0 = 1/lastelement(getinv(S,0))
+rve = (rv0-rv)/rv0 #residual variance explained
+plot(f,rve)
+rve.lm=lm(rve~f)
+summary(rve.lm)
+```
+
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
