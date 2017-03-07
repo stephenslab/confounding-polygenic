@@ -1,0 +1,126 @@
+---
+title: "LDAK"
+author: "Matthew Stephens"
+date: 2017-04-07
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+# Purpose
+
+My purpose here is just to outline some thoughts about the LDAK model. Disclaimer: these
+are very preliminary.
+
+# A simple block model for LD (to help thinking)
+
+Consider a model relating phenotype $Y$ ($n$ by 1) to SNPs $X$ ($n$ by $p$),
+$$Y=X\beta + E.$$
+
+I find it useful to think about really extreme and simple situations.
+So suppose your $X$ variables consist of blocks of completely correlated SNPs,
+where here completely correlated means population correlation = 1. Suppose
+also that the blocks are independent. 
+
+Let $p_j$ denote the number of SNPs in block $j$.
+
+So the first $p_1$ SNPs are completely correlated, next $p_2$ are completely correlated etc.
+And the first $p_1$ are independent of the next $p_2$ etc.
+
+Let $g_j$ denote the genotypes (an $n$ vector) of any SNP in block $j$. (They are all the same by assumption).
+
+## Classic polygenic model
+
+I will consider the "classic polygenic model" to be that the $\beta_j$ are iid and normal,  
+with 
+$$\beta_j \sim N(0,\sigma_b^2)$$.
+
+Then $Y \sim N(0, \sigma_b^2 XX' + \sigma^2 I)$, or
+$$Y \sim N(0, \sigma_b^2 \sum_{j} p_j g_j g_j' + \sigma^2 I)$$.
+
+That is, in the covariance matrix each block is weighted by the number of SNPs $p_j$. 
+
+## LDAK model
+
+As I understand it (check this!) the LDAK model would instead assume that $\beta_j$
+is somehow weighted by the number of SNPs it is in LD with:
+$$\beta_j \sim N(0,(1/p_j)\sigma_b^2)$$
+
+so $$Y \sim N(0, \sigma_b^2 \sum_{j} g_j g_j' + \sigma^2 I)$$.
+
+## Marginal effects and LD-score regression
+
+Let $\hat{\beta}_j$ denote the estimated marginal effect of $\beta_j$ from a *univariate* regression
+of $Y$ on $X_j$. What is the expected $\hat{\beta}_j$? We can compute this from RSS work. 
+
+I haven't yet done the algebra, but it seems that:
+
+- Under the classic polygenic model it would scale roughly linearly with $p_j$. [fill in details]
+
+- Under the LDAK model, it would be constant among $j$. 
+
+The LD score regression model attempts to distinguish between polygenicity and confounding by assuming that:
+
+1. the "polygenic" effects scale with the number of SNPs you are in LD with. That is, the classic polygenic model.
+
+2. the "confounding" effects are constant, independent of the number of SNPs you are in LD with. That
+is, the LDAK model. 
+
+In other words, from the point of view of LD score regression, the LDAK model is
+going to capture confounding, not polygenicity.
+
+
+## Speculation
+
+Consider fitting a combined model, with two variance components
+$$Y \sim N(0, \sigma_1^2 K_1 + \sigma_2^2 K_2 + \sigma^2 I)$$
+where 
+$K_1 = \sum_{j} p_j g_j g_j'$ and $K_2 = \sum_j g_j g_j'$.
+I speculate that the estimate of $\sigma_1$ corresponds to the slope of the LD regression
+model and that the estimate of $\sigma_2$ corresponds to the intercept.
+
+If correct, this would give a "full data" model that corresponds to the LD score regression model.
+
+Can you formalize this? 
+
+
+# Comments
+
+- There seems to be no good reason to assume that the *true* (causal) effect of a SNP will depend on how many other SNPs it is in LD with. (Maybe one could make convoluted arguments based on selection, but
+it seems to be not the most natural starting point.) That is, to me the LDAK assumption
+seems unnatural as a model for polygenicity.
+
+- If the above is correct then there seems to be something of a contradiction in the
+results from LD-score regression papers and LDAK. Specifically the LD score regression papers
+seems to suggest that in most diseases the inflation of test statistics is due to polygenicity and
+not confounding. Whereas, if the interpretation of the LDAK model as capturing confounding is correct, then the LDAK papers suggest that it is mostly due to confounding (although the LDAK authors
+do not interpret it this way I think.)
+
+
+
+
+
+
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
