@@ -26,7 +26,7 @@ knitr::read_chunk("chunks.R")
 
 # Purpose
 
-My purpose here is just to outline some thoughts about the LDAK model. Disclaimer: these
+My purpose here is to outline some thoughts about the LDAK model. Disclaimer: these
 are very preliminary.
 
 # A simple block model for LD (to help thinking)
