@@ -27,16 +27,18 @@ knitr::read_chunk("chunks.R")
 ## Setup
 
 A simple model of confounding is:
-$Z_j \sim N(0,1)$, $X_{jk} = Z_j + e_{1j}$, and $Y_j = Z_j + \sum_k X_{jk} \beta_k + e_{2j}$
-where $e_1$ and $e_2$ are iid $N(0,1)$ say. 
-So $$Y = Z_j (1+\sum_k \beta_k) + \sum_k \beta_k e_1 + e_2$$. 
+$Z_j \sim N(0,1)$, $X_{jk} = Z_j + e_{1kj}$, and $Y_j = Z_j + \sum_k X_{jk} \beta_k + e_{2j}$
+where the elements of $e_1$ and $e_2$, $e_{1jk}$ and $e_{2j}$, are all iid $N(0,1)$ say. 
+So $$Y_j = Z_j (1+\sum_k \beta_k) + \sum_k \beta_k e_{1jk} + e_{2j}$$. 
 
 Here $Z$ is the confounder, correlated with both $Y$ and $X$.
 
 My question is what happens to various procedures that attempt to estimate variance in $Y$ due to $X$ when not all the $X$ are used. Does the "bias" that occurs
 due to confounding with $Z$ increase or stay constant as you put more of the $X$ variables in?
 
-First compute the covariance matrix of (Z,X1...,XK,Y).
+First compute the covariance matrix of $(Z,X_1...,X_K,Y)$ by exploiting the fact that we
+can write $(Z,X_1...,X_K,Y)= L(Z,E_{11},\dots,E_{1K}, E_2)$ for some $L$.
+[Here $E_{1k}$ is the vector $e_{1\cdot k}$ and $X_k$ is the vector $X_{\cdot k}$.]
 ```{r cov}
 set.seed(1)
 K=500 # number of X variables
