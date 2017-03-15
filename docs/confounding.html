@@ -313,16 +313,16 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2017-03-07</p>
+<p><strong>Last updated:</strong> 2017-03-15</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> cb69a38</p>
+<p><strong>Code version:</strong> 87c6479</p>
 <div id="setup" class="section level2">
 <h2>Setup</h2>
-<p>A simple model of confounding is: <span class="math inline">\(Z_j \sim N(0,1)\)</span>, <span class="math inline">\(X_{jk} = Z_j + e_{1j}\)</span>, and <span class="math inline">\(Y_j = Z_j + \sum_k X_{jk} \beta_k + e_{2j}\)</span> where <span class="math inline">\(e_1\)</span> and <span class="math inline">\(e_2\)</span> are iid <span class="math inline">\(N(0,1)\)</span> say. So <span class="math display">\[Y = Z_j (1+\sum_k \beta_k) + \sum_k \beta_k e_1 + e_2\]</span>.</p>
+<p>A simple model of confounding is: <span class="math inline">\(Z_j \sim N(0,1)\)</span>, <span class="math inline">\(X_{jk} = Z_j + e_{1kj}\)</span>, and <span class="math inline">\(Y_j = Z_j + \sum_k X_{jk} \beta_k + e_{2j}\)</span> where the elements of <span class="math inline">\(e_1\)</span> and <span class="math inline">\(e_2\)</span>, <span class="math inline">\(e_{1jk}\)</span> and <span class="math inline">\(e_{2j}\)</span>, are all iid <span class="math inline">\(N(0,1)\)</span> say. So <span class="math display">\[Y_j = Z_j (1+\sum_k \beta_k) + \sum_k \beta_k e_{1jk} + e_{2j}\]</span>.</p>
 <p>Here <span class="math inline">\(Z\)</span> is the confounder, correlated with both <span class="math inline">\(Y\)</span> and <span class="math inline">\(X\)</span>.</p>
 <p>My question is what happens to various procedures that attempt to estimate variance in <span class="math inline">\(Y\)</span> due to <span class="math inline">\(X\)</span> when not all the <span class="math inline">\(X\)</span> are used. Does the “bias” that occurs due to confounding with <span class="math inline">\(Z\)</span> increase or stay constant as you put more of the <span class="math inline">\(X\)</span> variables in?</p>
-<p>First compute the covariance matrix of (Z,X1…,XK,Y).</p>
+<p>First compute the covariance matrix of <span class="math inline">\((Z,X_1...,X_K,Y)\)</span> by exploiting the fact that we can write <span class="math inline">\((Z,X_1...,X_K,Y)= L(Z,E_{11},\dots,E_{1K}, E_2)\)</span> for some <span class="math inline">\(L\)</span>. [Here <span class="math inline">\(E_{1k}\)</span> is the vector <span class="math inline">\(e_{1\cdot k}\)</span> and <span class="math inline">\(X_k\)</span> is the vector <span class="math inline">\(X_{\cdot k}\)</span>.]</p>
 <pre class="r"><code>set.seed(1)
 K=500 # number of X variables
 beta = rnorm(K,0,sd=sqrt(1/K))
